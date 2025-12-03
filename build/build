@@ -1,0 +1,90 @@
+#!/usr/bin/env zsh
+# ~/.config/c-cpp/c/libraries/f-libs/build/build
+
+# Dependencies
+## coreutils | https://formulae.brew.sh/formula/coreutils
+## gcc | https://formulae.brew.sh/formula/gcc
+## sd | https://formulae.brew.sh/formula/sd
+. "$ZSH_FUNCTIONS_DIR/c_compile_into_executable"
+. "$ZSH_FUNCTIONS_DIR/c_compile_into_object_file"
+. "$ZSH_FUNCTIONS_DIR/c_compile_into_shared_library"
+. "$ZSH_FUNCTIONS_DIR/clear"
+. "$ZSH_FUNCTIONS_DIR/pause_and_print_separator"
+. "$ZSH_FUNCTIONS_DIR/print_green"
+. "$ZSH_FUNCTIONS_DIR/print_separator"
+. "$ZSH_FUNCTIONS_DIR/reset_color"
+
+# Build `libflibs.dylib` and unit tests
+abbrev="flibs"
+
+## Version
+version="0.1.0"
+
+## Dependencies
+### Source files
+source_file_farr="$C_LIBRARIES_FLIBS_SRC_DIR/farr.c"
+source_file_fio="$C_LIBRARIES_FLIBS_SRC_DIR/fio.c"
+source_file_fmisc="$C_LIBRARIES_FLIBS_SRC_DIR/fmisc.c"
+source_file_fstr="$C_LIBRARIES_FLIBS_SRC_DIR/fstr.c"
+source_file_dependencies=(
+  "$source_file_farr"
+  "$source_file_fio"
+  "$source_file_fmisc"
+  "$source_file_fstr"
+)
+
+### Object files
+object_file_farr="$C_LIBRARIES_FLIBS_OBJ_DIR/farr.o"
+object_file_fio="$C_LIBRARIES_FLIBS_OBJ_DIR/fio.o"
+object_file_fmisc="$C_LIBRARIES_FLIBS_OBJ_DIR/fmisc.o"
+object_file_fstr="$C_LIBRARIES_FLIBS_OBJ_DIR/fstr.o"
+object_file_dependencies=(
+  "$object_file_farr"
+  "$object_file_fio"
+  "$object_file_fmisc"
+  "$object_file_fstr"
+)
+
+## Unit tests
+test="$C_LIBRARIES_FLIBS_SRC_DIR/test.c"
+test_files=("$test")
+
+## Options
+export GCC_DEFAULT_OPTS_C_STRING="$C_LIBRARIES_FLIBS_BUILD_DIR/options"
+export GCC_DEFAULT_OPTS_C_STRING="$(tail -n +2 $GCC_DEFAULT_OPTS_C_STRING\
+  | tr -d '"'\
+  | tr '\n' ' '\
+  | sd '\$C_LIBRARIES_FLIBS_INCLUDE_DIR' $C_LIBRARIES_FLIBS_INCLUDE_DIR)"
+export GCC_DEFAULT_OPTS_C=(${(@s: :)GCC_DEFAULT_OPTS_C_STRING})
+
+## Compile and link files
+clear
+print_green -n
+print_separator
+printf '%s\n' 'Building library files with the following GCC Options...'
+printf '\n'
+printf '    %s\n' "${GCC_DEFAULT_OPTS_C[@]}"
+printf '\n'
+
+for source_file in "${source_file_dependencies[@]}"; do
+  printf '%s' "c_compile_into_object_file \"$source_file\"..."
+  printf '\n'
+  c_compile_into_object_file "$source_file"
+done
+printf '\n'
+
+printf '%s \n' "c_compile_into_shared_library \"$abbrev\" \"$version\""
+for object_file in "${object_file_dependencies[@]}"; do
+  printf '    %s\n' "\"$object_file\""
+done
+c_compile_into_shared_library "$abbrev" "$version" "${object_file_dependencies[@]}"
+printf '\n'
+
+for test_file in $test_files; do
+  printf '%s' "c_compile_into_executable \"$test_file\" \"-L$C_LIBRARIES_FLIBS_LIB_DIR\" \"-l$abbrev\" ..."
+  printf '\n'
+  c_compile_into_executable "$test_file" "-L$C_LIBRARIES_FLIBS_LIB_DIR" "-l$abbrev"
+done
+printf '\n'
+pause_and_print_separator "Press Return to exit. "
+reset_color

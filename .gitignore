@@ -1,0 +1,6 @@
+**/bin/
+*c-executable
+.DS_Store
+*.dSYM
+**/lib/
+**/obj/

@@ -1,0 +1,9 @@
+# ~/.config/c-cpp/c/libraries/f-libs/build/options
+"-I$C_LIBRARIES_FLIBS_INCLUDE_DIR"
+"-I$C_LIBRARIES_FLIBS_INCLUDE_DIR/f-core"
+-Wall
+-Werror
+-Wextra
+-Wpedantic
+-g
+-std=c23
