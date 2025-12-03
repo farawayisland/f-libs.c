@@ -1,0 +1,129 @@
+#!/usr/bin/env zsh
+# ~/.config/c-cpp/c/libraries/f-libs/build/build
+
+# Dependencies
+## coreutils | https://formulae.brew.sh/formula/coreutils
+## gcc | https://formulae.brew.sh/formula/gcc
+## sd | https://formulae.brew.sh/formula/sd
+. "$ZSH_FUNCTIONS_DIR/c_compile_into_executable"
+. "$ZSH_FUNCTIONS_DIR/c_compile_into_object_file"
+. "$ZSH_FUNCTIONS_DIR/c_compile_into_shared_library"
+. "$ZSH_FUNCTIONS_DIR/clear"
+. "$ZSH_FUNCTIONS_DIR/pause_and_print_separator"
+. "$ZSH_FUNCTIONS_DIR/print_green"
+. "$ZSH_FUNCTIONS_DIR/print_separator"
+. "$ZSH_FUNCTIONS_DIR/reset_color"
+
+# Build `libflibs.dylib` and unit tests
+local abbrev="flibs"
+
+## Version
+local version="0.1.0"
+
+## Directory structure
+local dir_root="$C_LIBRARIES_FLIBS_DIR"
+
+### build
+local dir_build="$dir_root/build"
+local dir_bin="$dir_build/bin"
+local dir_lib="$dir_build/lib"
+local dir_obj="$dir_build/obj"
+
+### include
+local dir_include="$dir_root/include"
+local dir_fcore="$dir_include/f-core"
+
+### src
+local dir_src="$dir_root/src"
+
+### tests
+local dir_tests="$dir_root/tests"
+
+## Dependencies
+### Source files
+local file_src_farr="$dir_src/farr.c"
+local file_src_fio="$dir_src/fio.c"
+local file_src_flist="$dir_src/flist.c"
+local file_src_fmath="$dir_src/fmath.c"
+local file_src_fmisc="$dir_src/fmisc.c"
+local file_src_fstat="$dir_src/fstat.c"
+local file_src_fstr="$dir_src/fstr.c"
+local deps_src=(
+  "$file_src_farr"
+  "$file_src_fio"
+  "$file_src_flist"
+  "$file_src_fmath"
+  "$file_src_fmisc"
+  "$file_src_fstat"
+  "$file_src_fstr"
+)
+
+### Object files
+local file_obj_farr="$dir_obj/farr.o"
+local file_obj_fio="$dir_obj/fio.o"
+local file_obj_flist="$dir_obj/flist.o"
+local file_obj_fmath="$dir_obj/fmath.o"
+local file_obj_fmisc="$dir_obj/fmisc.o"
+local file_obj_fstat="$dir_obj/fstat.o"
+local file_obj_fstr="$dir_obj/fstr.o"
+local deps_obj=(
+  "$file_obj_farr"
+  "$file_obj_fio"
+  "$file_obj_flist"
+  "$file_obj_fmath"
+  "$file_obj_fmisc"
+  "$file_obj_fstat"
+  "$file_obj_fstr"
+)
+
+## Unit tests
+local file_test_farr="$dir_tests/test-farr.c"
+local file_test_main="$dir_tests/test-main.c"
+local tests=(
+  "$file_test_farr"
+  "$file_test_main"
+)
+
+## Options
+local gcc_opts_c_string_local="$dir_build/options"
+local gcc_opts_c_string_local="$(tail -n +2 $gcc_opts_c_string_local\
+  | tr -d '"'\
+  | tr '\n' ' '\
+  | sd '\$dir_include' $dir_include)"
+local gcc_opts_c_local=(${(@s: :)gcc_opts_c_string_local})
+local gcc_opts_c_default=("${GCC_OPTS_C[@]}")
+export GCC_OPTS_C=("${gcc_opts_c_local[@]}")
+
+## Compile and link files
+clear
+print_green -n
+print_separator
+printf '%s\n' 'Building library files with the following GCC Options...'
+printf '\n'
+printf '    %s\n' "${gcc_opts_c_local[@]}"
+printf '\n'
+
+for file_src in "${deps_src[@]}"; do
+  printf '%s' "c_compile_into_object_file \"$file_src\" ..."
+  printf '\n'
+  c_compile_into_object_file "$file_src"
+done
+printf '\n'
+
+printf '%s \n' "c_compile_into_shared_library \"$abbrev\" \"$version\""
+for file_obj in "${deps_obj[@]}"; do
+  printf '    %s\n' "\"$file_obj\""
+done
+c_compile_into_shared_library "$abbrev" "$version" "${deps_obj[@]}"
+printf '\n'
+
+for file_test in "${tests[@]}"; do
+  printf '%s\n' "c_compile_into_executable \"$file_test\" ..."
+  c_compile_into_executable "$file_test" "-L$dir_lib" "-l$abbrev"
+done
+printf '\n'
+pause_and_print_separator "Press Return to exit. "
+reset_color
+
+## Restore default GCC options
+export GCC_OPTS_C=("${gcc_opts_c_default[@]}")
