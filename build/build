@@ -24,11 +24,13 @@ version="0.1.0"
 ### Source files
 source_file_farr="$C_LIBRARIES_FLIBS_SRC_DIR/farr.c"
 source_file_fio="$C_LIBRARIES_FLIBS_SRC_DIR/fio.c"
+source_file_flist="$C_LIBRARIES_FLIBS_SRC_DIR/flist.c"
 source_file_fmisc="$C_LIBRARIES_FLIBS_SRC_DIR/fmisc.c"
 source_file_fstr="$C_LIBRARIES_FLIBS_SRC_DIR/fstr.c"
 source_file_dependencies=(
   "$source_file_farr"
   "$source_file_fio"
+  "$source_file_flist"
   "$source_file_fmisc"
   "$source_file_fstr"
 )
@@ -36,11 +38,13 @@ source_file_dependencies=(
 ### Object files
 object_file_farr="$C_LIBRARIES_FLIBS_OBJ_DIR/farr.o"
 object_file_fio="$C_LIBRARIES_FLIBS_OBJ_DIR/fio.o"
+object_file_flist="$C_LIBRARIES_FLIBS_OBJ_DIR/flist.o"
 object_file_fmisc="$C_LIBRARIES_FLIBS_OBJ_DIR/fmisc.o"
 object_file_fstr="$C_LIBRARIES_FLIBS_OBJ_DIR/fstr.o"
 object_file_dependencies=(
   "$object_file_farr"
   "$object_file_fio"
+  "$object_file_flist"
   "$object_file_fmisc"
   "$object_file_fstr"
 )
