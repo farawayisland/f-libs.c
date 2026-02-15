@@ -3,6 +3,23 @@
 
 /* Singly-Linked List */
 // Memory allocations and deallocations for list nodes and lists
+struct SList *init_empty_list_s(void) {
+  struct SList *new_list = malloc(sizeof(*new_list));
+
+  if (!new_list) {
+    const char err[] = "ERROR: `malloc()` returned NULL.";
+    println_err(err);
+    exit(EXIT_FAILURE);
+  }
+
+  set_head_list_s(new_list, NULL);
+  set_mid_list_s(new_list, NULL);
+  set_tail_list_s(new_list, NULL);
+  set_len_list_s(new_list, 0);
+
+  return new_list;
+}
+
 struct SList *init_list_s(const char *id, int val) {
   struct SList *new_list = malloc(sizeof(*new_list));
   struct SListNode *new_node = init_node_s(id, val);
@@ -15,10 +32,30 @@ struct SList *init_list_s(const char *id, int val) {
   }
 
   set_head_list_s(new_list, new_node);
+  set_mid_list_s(new_list, new_node);
   set_tail_list_s(new_list, new_node);
   set_len_list_s(new_list, new_len);
 
   return new_list;
+}
+
+struct SListNode *init_empty_node_s(void) {
+  struct SListNode *new_node = malloc(sizeof(*new_node));
+  struct SListNodeData *new_data = malloc(sizeof(*new_data));
+  char *new_id = calloc(MAX_SIZE_STR_GENERAL, sizeof(*new_id));
+
+  if (!new_node || !new_data || !new_id) {
+    const char err[] = "ERROR: either `malloc()` or `calloc()` returned NULL.";
+    println_err(err);
+    exit(EXIT_FAILURE);
+  }
+
+  set_id_dest_data_s(new_data, new_id);
+  set_val_data_s(new_data, 0);
+  set_data_node_s(new_node, new_data);
+  set_next_node_s(new_node, NULL);
+
+  return new_node;
 }
 
 struct SListNode *init_node_s(const char *id, int val) {
@@ -129,10 +166,13 @@ void set_next_node_s(struct SListNode *node, struct SListNode *next) {
 struct SListNode *remove_node_s(struct SList *list, struct SListNode *target) {
   struct SListNode *removed_node = NULL;
   struct SListNode *head = get_head_list_s(list);
+  struct SListNode *mid = get_mid_list_s(list);
   struct SListNode *tail = get_tail_list_s(list);
 
   if (target == head) {
     removed_node = pop_head_node_s(list);
+  } else if (target == mid) {
+    removed_node = pop_mid_node_s(list);
   } else if (target == tail) {
     removed_node = pop_tail_node_s(list);
   } else {
@@ -173,13 +213,15 @@ void append_node_s(struct SList *list, struct SListNode *anchor,
 
   if (anchor == tail) {
     push_tail_node_s(list, new_node);
-  } else {
-    const size_t len = get_len_list_s(list);
-    struct SListNode *after_anchor = get_next_node_s(anchor);
-    set_next_node_s(new_node, after_anchor);
-    set_next_node_s(anchor, new_node);
-    set_len_list_s(list, len + 1);
+    return;
   }
+
+  const size_t len = get_len_list_s(list);
+  struct SListNode *after_anchor = get_next_node_s(anchor);
+  set_next_node_s(new_node, after_anchor);
+  set_next_node_s(anchor, new_node);
+  set_len_list_s(list, len + 1);
+  recalc_mid_list_s(list);
 }
 
 void prepend_node_s(struct SList *list, struct SListNode *anchor,
@@ -213,6 +255,7 @@ void prepend_node_s(struct SList *list, struct SListNode *anchor,
     set_next_node_s(before_anchor, new_node);
     set_next_node_s(new_node, anchor);
     set_len_list_s(list, len + 1);
+    recalc_mid_list_s(list);
   }
 }
 
@@ -245,8 +288,12 @@ struct SListNode *pop_head_node_s(struct SList *list) {
       set_len_list_s(list, len - 1);
     }
 
+    struct SListNode *mid = get_mid_list_s(list);
     if (head == tail) {
+      set_mid_list_s(list, NULL);
       set_tail_list_s(list, NULL);
+    } else if (head == mid) {
+      set_mid_list_s(list, tail);
     }
   }
 
@@ -261,11 +308,138 @@ void push_head_node_s(struct SList *list, struct SListNode *new_node) {
   }
 
   struct SListNode *head = get_head_list_s(list);
+  struct SListNode *mid = get_mid_list_s(list);
+  struct SListNode *tail = get_tail_list_s(list);
   const size_t len = get_len_list_s(list);
+  const bool is_len_odd = is_odd_size_t(len);
+
+  if (!tail) {
+    set_tail_list_s(list, new_node);
+  }
+
+  if (len < 2) {
+    set_mid_list_s(list, new_node);
+  } else if (is_len_odd) {
+
+    struct SListNode *prev = head;
+
+    while (get_next_node_s(prev) != mid) {
+      prev = get_next_node_s(prev);
+    }
+
+    set_mid_list_s(list, prev);
+  }
 
   set_head_list_s(list, new_node);
   set_next_node_s(new_node, head);
   set_len_list_s(list, len + 1);
+}
+
+/// Middle nodes
+struct SListNode *get_mid_list_s(struct SList *list) { return list->mid; }
+
+void set_mid_list_s(struct SList *list, struct SListNode *mid) {
+  list->mid = mid;
+}
+
+//// Push and pop middle nodes
+struct SListNode *pop_mid_node_s(struct SList *list) {
+  struct SListNode *mid = NULL;
+
+  if (!list) {
+    const char err[] = "ERROR: `list` is NULL.";
+    println_err(err);
+  } else {
+
+    struct SListNode *head = get_head_list_s(list);
+    mid = get_mid_list_s(list);
+
+    if (head == mid) {
+      mid = pop_head_node_s(list);
+    } else {
+
+      struct SListNode **curr_ref = &list->head;
+      struct SListNode *curr = *curr_ref;
+      struct SListNode *prev = curr;
+
+      while (curr && (curr != mid)) {
+
+        if (get_next_node_s(curr) == mid) {
+          prev = curr;
+        }
+
+        curr_ref = &curr->next;
+        curr = *curr_ref;
+      }
+
+      if (curr) {
+
+        const size_t len = get_len_list_s(list);
+        struct SListNode *next = get_next_node_s(curr);
+        const bool is_len_odd = is_odd_size_t(len);
+        struct SListNode *new_mid = is_len_odd ? prev : next;
+
+        *curr_ref = next;
+        set_mid_list_s(list, new_mid);
+        set_next_node_s(mid, NULL);
+        set_len_list_s(list, len - 1);
+      }
+    }
+  }
+
+  return mid;
+}
+
+void push_mid_node_s(struct SList *list, struct SListNode *new_node) {
+  if (!list || !new_node) {
+    const char err[] = "ERROR: either `list` or `new_node` is NULL.";
+    println_err(err);
+    return;
+  }
+
+  struct SListNode *head = get_head_list_s(list);
+  struct SListNode *mid = get_mid_list_s(list);
+  const size_t len = get_len_list_s(list);
+
+  if (len < 2) {
+    push_head_node_s(list, new_node);
+    return;
+  }
+
+  const bool is_head_mid = head == mid;
+  const bool is_len_odd = is_odd_size_t(len);
+  struct SListNode *prev = mid;
+  struct SListNode *next = is_len_odd ? mid : get_next_node_s(mid);
+
+  if (!is_head_mid && is_len_odd) {
+
+    prev = head;
+
+    while (get_next_node_s(prev) != mid) {
+      prev = get_next_node_s(prev);
+    }
+  }
+
+  set_mid_list_s(list, new_node);
+  set_next_node_s(prev, new_node);
+  set_next_node_s(new_node, next);
+  set_len_list_s(list, len + 1);
+}
+
+//// Recalculate middle nodes
+void recalc_mid_list_s(struct SList *list) {
+  struct SListNode *head = get_head_list_s(list);
+  struct SListNode *mid = head;
+  const size_t len = get_len_list_s(list);
+  const size_t len_half = len / 2;
+
+  for (size_t i = 0; i < len_half - 1; ++i) {
+    mid = get_next_node_s(mid);
+  }
+
+  const bool is_len_odd = is_odd_size_t(len);
+  mid = is_len_odd ? get_next_node_s(mid) : mid;
+  set_mid_list_s(list, mid);
 }
 
 /// Tail nodes
@@ -318,9 +492,20 @@ void push_tail_node_s(struct SList *list, struct SListNode *new_node) {
     return;
   }
 
+  struct SListNode *head = get_head_list_s(list);
+
+  if (!head) {
+    push_head_node_s(list, new_node);
+    return;
+  }
+
+  struct SListNode *mid = get_mid_list_s(list);
   struct SListNode *tail = get_tail_list_s(list);
   const size_t len = get_len_list_s(list);
+  const bool is_len_odd = is_odd_size_t(len);
+  struct SListNode *new_mid = is_len_odd ? mid : get_next_node_s(mid);
 
+  set_mid_list_s(list, new_mid);
   set_tail_list_s(list, new_node);
   set_next_node_s(tail, new_node);
   set_len_list_s(list, len + 1);

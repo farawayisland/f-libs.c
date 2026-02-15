@@ -3,7 +3,7 @@
 #define FLIST_H_
 
 #include "fio.h"
-#include <stdlib.h>
+#include "fmath.h"
 
 /* Singly-Linked List */
 // List-node data
@@ -20,13 +20,18 @@ struct SListNode {
 
 // List
 struct SList {
+  bool sorted_asc;
+  bool sorted_desc;
   size_t len;
   struct SListNode *head;
+  struct SListNode *mid;
   struct SListNode *tail;
 };
 
 // Memory allocations and deallocations for list nodes and lists
+struct SList *init_empty_list_s(void);
 struct SList *init_list_s(const char *id, int val);
+struct SListNode *init_empty_node_s(void);
 struct SListNode *init_node_s(const char *id, int val);
 void free_list_s(struct SList **list_ref);
 void free_node_s(struct SListNode **node_ref);
@@ -62,6 +67,17 @@ void set_head_list_s(struct SList *list, struct SListNode *head);
 //// Push and pop head nodes
 struct SListNode *pop_head_node_s(struct SList *list);
 void push_head_node_s(struct SList *list, struct SListNode *new_node);
+
+/// Middle nodes
+struct SListNode *get_mid_list_s(struct SList *list);
+void set_mid_list_s(struct SList *list, struct SListNode *mid);
+
+//// Push and pop middle nodes
+struct SListNode *pop_mid_node_s(struct SList *list);
+void push_mid_node_s(struct SList *list, struct SListNode *new_node);
+
+//// Recalculate middle-nodes
+void recalc_mid_list_s(struct SList *list);
 
 /// Tail nodes
 struct SListNode *get_tail_list_s(struct SList *list);
