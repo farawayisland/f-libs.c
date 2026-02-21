@@ -33,6 +33,10 @@ bool is_sorted_desc_arr_int(int *arr, size_t len) {
 // Sorts array of ints in ascending order
 /// Bubble sort
 void sort_asc_bubble_arr_int(int *arr, size_t len) {
+  if (len < 2) {
+    return;
+  }
+
   bool swap_occurs = false;
 
   for (size_t i = 0; i < len - 1; ++i) {
@@ -47,9 +51,31 @@ void sort_asc_bubble_arr_int(int *arr, size_t len) {
 }
 
 /// Quicksort
-size_t partition_lomuto_arr_int(int *arr, size_t low, size_t high) {
+int median_of_three_asc_arr_int(int *arr, size_t len) {
+  const size_t low = 0;
+  const size_t mid = len / 2;
+  const size_t high = len - 1;
+
+  if (arr[low] > arr[mid]) {
+    swap_int(&arr[low], &arr[mid]);
+  }
+
+  if (arr[mid] > arr[high]) {
+    swap_int(&arr[mid], &arr[high]);
+  }
+
+  if (arr[low] > arr[mid]) {
+    swap_int(&arr[low], &arr[mid]);
+  }
+
+  const int pivot = arr[mid];
+
+  return pivot;
+}
+
+size_t partition_asc_lomuto_arr_int(int *arr, size_t low, size_t high) {
   size_t index_pivot = low;
-  int pivot = arr[high];
+  const int pivot = arr[high];
 
   for (size_t i = low; i < high; ++i) {
     if (arr[i] <= pivot) {
@@ -71,12 +97,11 @@ void sort_asc_quick_hoare_arr_int(int *arr, size_t len) {
     return;
   }
 
-  const size_t mid = len / 2;
-  const int pivot = arr[mid];
+  const int pivot = median_of_three_asc_arr_int(arr, len);
 
   size_t i = 0;
   size_t j = len - 1;
-  for (; true; ++i, --j) {
+  for (;; ++i, --j) {
 
     while (arr[i] < pivot) {
       ++i;
@@ -110,7 +135,7 @@ void sort_asc_quick_lomuto_in_range_arr_int(int *arr, size_t low, size_t high) {
     return;
   }
 
-  int index_pivot = partition_lomuto_arr_int(arr, low, high);
+  int index_pivot = partition_asc_lomuto_arr_int(arr, low, high);
   sort_asc_quick_lomuto_in_range_arr_int(arr, low, index_pivot - 1);
   sort_asc_quick_lomuto_in_range_arr_int(arr, index_pivot + 1, high);
 }
@@ -118,6 +143,10 @@ void sort_asc_quick_lomuto_in_range_arr_int(int *arr, size_t low, size_t high) {
 // Sorts array of ints in descending order
 /// Bubble sort
 void sort_desc_bubble_arr_int(int *arr, size_t len) {
+  if (len < 2) {
+    return;
+  }
+
   bool swap_occurs = false;
 
   for (size_t i = 0; i < len - 1; ++i) {

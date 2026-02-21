@@ -24,7 +24,8 @@ extern bool is_sorted_desc_arr_int(int *arr, size_t len);
 extern void sort_asc_bubble_arr_int(int *arr, size_t len);
 
 /// Quicksort
-extern size_t partition_lomuto_arr_int(int *arr, size_t low, size_t high);
+extern int median_of_three_asc_arr_int(int *arr, size_t len);
+extern size_t partition_asc_lomuto_arr_int(int *arr, size_t low, size_t high);
 extern void sort_asc_quick_arr_int(int *arr, size_t len);
 extern void sort_asc_quick_hoare_arr_int(int *arr, size_t len);
 extern void sort_asc_quick_lomuto_arr_int(int *arr, size_t len);
